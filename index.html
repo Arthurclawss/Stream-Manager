@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinançaDia - Controle de Vendas e Finanças Diárias</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar or Navigation Header -->
+        <header class="main-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i data-lucide="wallet"></i>
+                </div>
+                <div>
+                    <h1>FinançaDia</h1>
+                    <p class="subtitle" id="user-welcome">Seu controle financeiro descomplicado</p>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="date-filter-wrapper">
+                    <label for="global-date-filter" class="sr-only">Filtrar por data</label>
+                    <div class="input-icon-group">
+                        <i data-lucide="calendar" class="input-icon"></i>
+                        <input type="date" id="global-date-filter">
+                    </div>
+                    <button id="btn-show-all" class="btn btn-secondary btn-sm" title="Mostrar todos os registros">
+                        <i data-lucide="list"></i> Ver Tudo
+                    </button>
+                </div>
+
+                <a href="/streaming" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight: 500; height: 38px; line-height: 1;" title="Ir para Gerenciamento de Streaming">
+                    <i data-lucide="tv" style="width: 16px; height: 16px;"></i> Contas Streaming
+                </a>
+                
+                <button id="theme-toggle" class="btn-theme-toggle" aria-label="Alternar tema">
+                    <i data-lucide="moon" class="theme-icon-dark"></i>
+                    <i data-lucide="sun" class="theme-icon-light"></i>
+                </button>
+
+                <button id="btn-logout" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; height: 38px; border-color: rgba(239, 68, 68, 0.15); color: #ef4444;" title="Sair da Conta">
+                    <i data-lucide="log-out" style="width: 16px; height: 16px;"></i> Sair
+                </button>
+            </div>
+        </header>
+
+        <!-- Metrics Dashboard -->
+        <section class="dashboard-metrics" aria-label="Resumo Financeiro">
+            <div class="metric-card sales-card">
+                <div class="card-glow"></div>
+                <div class="metric-header">
+                    <span class="metric-title">Vendas do Dia</span>
+                    <div class="metric-icon-bg">
+                        <span>💰</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="total-sales">R$ 0,00</div>
+                <div class="metric-footer">
+                    <i data-lucide="trending-up" class="trend-icon"></i>
+                    <span>Entradas acumuladas</span>
+                </div>
+            </div>
+
+            <div class="metric-card expenses-card">
+                <div class="card-glow"></div>
+                <div class="metric-header">
+                    <span class="metric-title">Gastos do Dia</span>
+                    <div class="metric-icon-bg">
+                        <span>💸</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="total-expenses">R$ 0,00</div>
+                <div class="metric-footer">
+                    <i data-lucide="trending-down" class="trend-icon text-danger"></i>
+                    <span>Despesas acumuladas</span>
+                </div>
+            </div>
+
+            <div class="metric-card profit-card" id="profit-metric-container">
+                <div class="card-glow"></div>
+                <div class="metric-header">
+                    <span class="metric-title">Lucro do Dia</span>
+                    <div class="metric-icon-bg">
+                        <span>📊</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="total-profit">R$ 0,00</div>
+                <div class="metric-footer">
+                    <i data-lucide="dollar-sign" class="trend-icon"></i>
+                    <span id="profit-status-text">Resultado líquido</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Left Side: Form and Chart -->
+            <div class="content-left">
+                <!-- Registration Form Card -->
+                <section class="card form-section" aria-labelledby="form-title">
+                    <h2 id="form-title" class="section-title">
+                        <i data-lucide="plus-circle" class="title-icon"></i> Novo Registro
+                    </h2>
+                    
+                    <form id="finance-form" novalidate>
+                        <!-- Form Toggle for Quick Entry Type (Optional but helps clarity) -->
+                        <div class="form-row">
+                            <div class="form-group flex-1">
+                                <label for="entry-sale">Valor da Venda (Ganho)</label>
+                                <div class="input-currency-group">
+                                    <span class="currency-prefix">R$</span>
+                                    <input type="number" id="entry-sale" placeholder="0,00" min="0" step="0.01">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group flex-1">
+                                <label for="entry-expense">Valor do Gasto (Despesa)</label>
+                                <div class="input-currency-group">
+                                    <span class="currency-prefix">R$</span>
+                                    <input type="number" id="entry-expense" placeholder="0,00" min="0" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="entry-description">Descrição (Opcional)</label>
+                            <input type="text" id="entry-description" placeholder="Ex: Venda de bolo, Compra de sacolas, etc.">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="entry-date">Data do Registro</label>
+                            <input type="date" id="entry-date" required>
+                        </div>
+
+                        <input type="hidden" id="entry-id">
+
+                        <div class="form-buttons">
+                            <button type="submit" id="btn-submit" class="btn btn-primary">
+                                <i data-lucide="check" class="btn-icon"></i> Adicionar Registro
+                            </button>
+                            <button type="button" id="btn-cancel-edit" class="btn btn-secondary hidden">
+                                Cancelar Edição
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Chart Card -->
+                <section class="card chart-section" aria-labelledby="chart-title">
+                    <div class="chart-header">
+                        <h2 id="chart-title" class="section-title">
+                            <i data-lucide="bar-chart-3" class="title-icon"></i> Visão Geral de Fluxo
+                        </h2>
+                        <span class="chart-subtitle">Últimos 7 dias com lançamentos</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="financeChart"></canvas>
+                        <div id="chart-empty-state" class="empty-state hidden">
+                            <i data-lucide="pie-chart" class="empty-icon"></i>
+                            <p>Adicione registros com valores para visualizar o gráfico.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Side: History -->
+            <div class="content-right">
+                <section class="card history-section" aria-labelledby="history-title">
+                    <div class="history-header">
+                        <div>
+                            <h2 id="history-title" class="section-title">
+                                <i data-lucide="history" class="title-icon"></i> Histórico de Registros
+                            </h2>
+                            <p class="history-subtitle" id="history-filter-info">Exibindo registros de hoje</p>
+                        </div>
+                        
+                        <div class="history-actions">
+                            <button id="btn-clear-history" class="btn btn-danger btn-sm" title="Limpar todos os registros do aplicativo">
+                                <i data-lucide="trash-2"></i> Limpar Tudo
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search within history -->
+                    <div class="search-box">
+                        <div class="input-icon-group">
+                            <i data-lucide="search" class="input-icon"></i>
+                            <input type="text" id="history-search" placeholder="Buscar por descrição...">
+                        </div>
+                    </div>
+
+                    <!-- List Container -->
+                    <div class="history-list-wrapper">
+                        <ul id="history-list" class="history-list">
+                            <!-- Items populated by JS -->
+                        </ul>
+                        
+                        <!-- Empty State -->
+                        <div id="history-empty-state" class="empty-state">
+                            <div class="empty-icon-wrapper">
+                                <i data-lucide="clipboard-list" class="empty-icon"></i>
+                            </div>
+                            <h3>Nenhum registro encontrado</h3>
+                            <p id="empty-state-msg">Adicione sua primeira venda ou gasto usando o formulário ao lado para começar.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Custom Script -->
+    <script src="app.js"></script>
+</body>
+</html>

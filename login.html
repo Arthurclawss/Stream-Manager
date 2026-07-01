@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso - FinançaDia & StreamManager</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="card-glow"></div>
+            
+            <div class="brand-area">
+                <div class="brand-icon">
+                    <i data-lucide="shield-check"></i>
+                </div>
+                <h2>Acesso Unificado</h2>
+                <p>Entre para gerenciar suas vendas e contas de streaming</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs-container">
+                <button class="tab-btn active" id="tab-login">Entrar</button>
+                <button class="tab-btn" id="tab-register">Cadastrar</button>
+            </div>
+
+            <!-- Error Alerts -->
+            <div id="error-alert" class="alert alert-danger hidden">
+                <i data-lucide="alert-triangle"></i>
+                <span id="error-msg">Ocorreu um erro.</span>
+            </div>
+
+            <!-- Success Alerts -->
+            <div id="success-alert" class="alert alert-success hidden">
+                <i data-lucide="check-circle-2"></i>
+                <span>Cadastro realizado com sucesso! Faça login para continuar.</span>
+            </div>
+
+            <!-- Form -->
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="username">Nome de Usuário</label>
+                    <div class="input-icon-group">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="username" placeholder="Digite seu usuário" required autocomplete="username">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <div class="input-icon-group">
+                        <i data-lucide="lock" class="input-icon"></i>
+                        <input type="password" id="password" placeholder="Digite sua senha" required autocomplete="current-password">
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit" class="btn btn-primary btn-block">
+                    <span id="btn-text">Entrar no Painel</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Lucide Icons
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const authForm = document.getElementById('auth-form');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const btnSubmit = document.getElementById('btn-submit');
+            const btnText = document.getElementById('btn-text');
+            
+            const errorAlert = document.getElementById('error-alert');
+            const errorMsg = document.getElementById('error-msg');
+            const successAlert = document.getElementById('success-alert');
+
+            let mode = 'login'; // 'login' or 'register'
+
+            // Check if already logged in
+            const token = localStorage.getItem('financadia_token');
+            if (token) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirect = urlParams.get('redirect') || '/';
+                window.location.href = redirect;
+            }
+
+            // Tab switching
+            tabLogin.addEventListener('click', () => {
+                mode = 'login';
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
+                btnText.textContent = 'Entrar no Painel';
+                errorAlert.classList.add('hidden');
+                successAlert.classList.add('hidden');
+            });
+
+            tabRegister.addEventListener('click', () => {
+                mode = 'register';
+                tabRegister.classList.add('active');
+                tabLogin.classList.remove('active');
+                btnText.textContent = 'Criar Minha Conta';
+                errorAlert.classList.add('hidden');
+                successAlert.classList.add('hidden');
+            });
+
+            // Handle Submit
+            authForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                errorAlert.classList.add('hidden');
+                successAlert.classList.add('hidden');
+
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value;
+
+                if (!username || !password) return;
+
+                const endpoint = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
+
+                try {
+                    btnSubmit.disabled = true;
+                    btnSubmit.style.opacity = '0.7';
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Erro na autenticação.');
+                    }
+
+                    if (mode === 'login') {
+                        // Store credentials
+                        localStorage.setItem('financadia_token', data.token);
+                        localStorage.setItem('financadia_username', data.username);
+                        
+                        // Redirect to original page
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const redirect = urlParams.get('redirect') || '/';
+                        window.location.href = redirect;
+                    } else {
+                        // Registration success
+                        successAlert.classList.remove('hidden');
+                        mode = 'login';
+                        tabLogin.classList.add('active');
+                        tabRegister.classList.remove('active');
+                        btnText.textContent = 'Entrar no Painel';
+                        passwordInput.value = '';
+                    }
+                } catch (err) {
+                    errorMsg.textContent = err.message;
+                    errorAlert.classList.remove('hidden');
+                } finally {
+                    btnSubmit.disabled = false;
+                    btnSubmit.style.opacity = '1';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

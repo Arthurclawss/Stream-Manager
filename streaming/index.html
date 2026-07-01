@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamManager - Controle de Contas e Telas</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">
+                    <i data-lucide="play-circle"></i>
+                </div>
+                <div>
+                    <h2>StreamManager</h2>
+                    <span class="logo-sub" id="user-welcome">Painel do Revendedor</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-link active" data-tab="tab-dashboard">
+                    <i data-lucide="layout-dashboard"></i> Painel Principal
+                </button>
+                <button class="nav-link" data-tab="tab-accounts">
+                    <i data-lucide="tv"></i> Contas e Telas
+                </button>
+                <button class="nav-link" data-tab="tab-customers">
+                    <i data-lucide="users"></i> Clientes
+                </button>
+                <hr style="border-color: rgba(255,255,255,0.08); margin: 12px 16px;">
+                <a href="/" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: var(--text-muted); text-decoration: none; border-radius: 8px; font-size: 0.95rem; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.color='var(--primary)'; this.style.background='var(--hover-bg)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='transparent';">
+                    <i data-lucide="wallet" style="width: 18px; height: 18px;"></i> Controle Financeiro
+                </a>
+            </nav>
+
+            <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 8px;">
+                <button id="theme-toggle" class="btn-theme-toggle" aria-label="Alternar tema">
+                    <i data-lucide="moon" class="theme-icon-dark"></i>
+                    <i data-lucide="sun" class="theme-icon-light"></i>
+                    <span class="theme-text">Modo Escuro</span>
+                </button>
+                <button id="btn-logout" class="btn-theme-toggle" aria-label="Sair da conta" style="color: #ef4444; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
+                    <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+                    <span class="theme-text">Sair da Conta</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <div class="header-title">
+                    <h1 id="page-title">Painel Principal</h1>
+                    <p class="current-date" id="header-date">Terça-feira, 30 de Junho</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="btn-open-modal-customer">
+                        <i data-lucide="user-plus"></i> Novo Cliente
+                    </button>
+                    <button class="btn btn-primary" id="btn-open-modal-account">
+                        <i data-lucide="plus"></i> Nova Conta
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB 1: DASHBOARD -->
+            <div id="tab-dashboard" class="tab-panel active">
+                <!-- Summary Stats -->
+                <section class="summary-cards" aria-label="Resumo Estatístico">
+                    <div class="stat-card card-active">
+                        <div class="stat-header">
+                            <span class="stat-title">Contas Ativas</span>
+                            <span class="stat-icon-bg">🟢</span>
+                        </div>
+                        <div class="stat-value" id="stat-active-count">0</div>
+                        <p class="stat-footer">Assinaturas funcionando</p>
+                    </div>
+
+                    <div class="stat-card card-warning">
+                        <div class="stat-header">
+                            <span class="stat-title">Vencem em Breve</span>
+                            <span class="stat-icon-bg">🟡</span>
+                        </div>
+                        <div class="stat-value" id="stat-warning-count">0</div>
+                        <p class="stat-footer">Vencimento nos próximos 3 dias</p>
+                    </div>
+
+                    <div class="stat-card card-danger">
+                        <div class="stat-header">
+                            <span class="stat-title">Contas Vencidas</span>
+                            <span class="stat-icon-bg">🔴</span>
+                        </div>
+                        <div class="stat-value" id="stat-expired-count">0</div>
+                        <p class="stat-footer">Necessitam de renovação</p>
+                    </div>
+
+                    <div class="stat-card card-info">
+                        <div class="stat-header">
+                            <span class="stat-title">Total de Clientes</span>
+                            <span class="stat-icon-bg">👥</span>
+                        </div>
+                        <div class="stat-value" id="stat-customers-count">0</div>
+                        <p class="stat-footer">Cadastrados no sistema</p>
+                    </div>
+                </section>
+
+                <!-- Expiring Soon Alerts -->
+                <section class="dashboard-alerts card">
+                    <h3 class="section-title">
+                        <i data-lucide="alert-triangle" class="title-icon text-warning"></i> Próximos Vencimentos
+                    </h3>
+                    <div class="alerts-wrapper">
+                        <div class="table-container">
+                            <table class="data-table" id="table-upcoming-expirations">
+                                <thead>
+                                    <tr>
+                                        <th>Plataforma</th>
+                                        <th>Login / Conta</th>
+                                        <th>Cliente</th>
+                                        <th>Plano</th>
+                                        <th>Vencimento</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="upcoming-expirations-list">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="dashboard-empty-alerts" class="empty-state hidden">
+                            <i data-lucide="check-circle" class="empty-icon text-success"></i>
+                            <h4>Tudo em dia!</h4>
+                            <p>Não há contas vencidas ou vencendo nos próximos 3 dias.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB 2: ACCOUNTS / SCREENS -->
+            <div id="tab-accounts" class="tab-panel">
+                <section class="card filter-section">
+                    <div class="filter-grid">
+                        <div class="filter-group search-bar">
+                            <label for="search-accounts" class="sr-only">Pesquisar contas</label>
+                            <div class="input-icon-group">
+                                <i data-lucide="search" class="input-icon"></i>
+                                <input type="text" id="search-accounts" placeholder="Pesquisar por email, senha ou plano...">
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="filter-platform">Plataforma</label>
+                            <select id="filter-platform">
+                                <option value="all">Todas as plataformas</option>
+                                <option value="Netflix">Netflix</option>
+                                <option value="Prime Video">Prime Video</option>
+                                <option value="Disney+">Disney+</option>
+                                <option value="Max">Max (HBO)</option>
+                                <option value="Paramount+">Paramount+</option>
+                                <option value="Spotify">Spotify</option>
+                                <option value="Youtube">Youtube Premium</option>
+                                <option value="Claro TV">Claro TV</option>
+                                <option value="Vivo Play">Vivo Play</option>
+                                <option value="Globoplay">Globoplay</option>
+                                <option value="Sky+">Sky+</option>
+                                <option value="IPTV">IPTV</option>
+                                <option value="Outra">Outra</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="filter-status">Status</label>
+                            <select id="filter-status">
+                                <option value="all">Todos os status</option>
+                                <option value="active">Ativas</option>
+                                <option value="warning">Vencem em breve (<= 3d)</option>
+                                <option value="expired">Vencidas / Suspensas</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card accounts-list-card">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Plataforma</th>
+                                    <th>Acesso / Login</th>
+                                    <th>Plano / Perfil</th>
+                                    <th>Cliente Vinculado</th>
+                                    <th>Vencimento</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accounts-table-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="accounts-empty-state" class="empty-state hidden">
+                        <i data-lucide="tv" class="empty-icon"></i>
+                        <h4>Nenhuma conta encontrada</h4>
+                        <p>Adicione novas contas clicando no botão "Nova Conta" acima.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB 3: CUSTOMERS -->
+            <div id="tab-customers" class="tab-panel">
+                <section class="card filter-section">
+                    <div class="filter-grid">
+                        <div class="filter-group search-bar flex-grow-1">
+                            <label for="search-customers" class="sr-only">Pesquisar clientes</label>
+                            <div class="input-icon-group">
+                                <i data-lucide="search" class="input-icon"></i>
+                                <input type="text" id="search-customers" placeholder="Pesquisar por nome de cliente ou telefone...">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card customers-list-card">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>WhatsApp / Contato</th>
+                                    <th>Conta Vinculada</th>
+                                    <th>Data de Início</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-table-list">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="customers-empty-state" class="empty-state hidden">
+                        <i data-lucide="users" class="empty-icon"></i>
+                        <h4>Nenhum cliente encontrado</h4>
+                        <p>Cadastre clientes e vincule-os a telas ativas para organizar seus recebimentos.</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: ADD / EDIT ACCOUNT -->
+    <div id="modal-account" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-account-title">Cadastrar Nova Conta</h3>
+                <button class="btn-close-modal" aria-label="Fechar modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-account">
+                <input type="hidden" id="account-id">
+                
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="account-platform">Plataforma *</label>
+                        <select id="account-platform" required>
+                            <option value="">Selecione...</option>
+                            <option value="Netflix">Netflix</option>
+                            <option value="Prime Video">Prime Video</option>
+                            <option value="Disney+">Disney+</option>
+                            <option value="Max">Max (HBO)</option>
+                            <option value="Paramount+">Paramount+</option>
+                            <option value="Spotify">Spotify</option>
+                            <option value="Youtube">Youtube Premium</option>
+                            <option value="Claro TV">Claro TV</option>
+                            <option value="Vivo Play">Vivo Play</option>
+                            <option value="Globoplay">Globoplay</option>
+                            <option value="Sky+">Sky+</option>
+                            <option value="IPTV">IPTV</option>
+                            <option value="Outra">Outra (Especificar)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group flex-1 hidden" id="group-custom-platform">
+                        <label for="account-custom-platform">Qual plataforma?</label>
+                        <input type="text" id="account-custom-platform" placeholder="Ex: Crunchyroll">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="account-email">E-mail / Login *</label>
+                    <input type="email" id="account-email" placeholder="email@exemplo.com" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="account-password">Senha *</label>
+                        <div class="input-password-wrapper">
+                            <input type="password" id="account-password" required>
+                            <button type="button" class="btn-toggle-password" tabindex="-1"><i data-lucide="eye"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group flex-1">
+                        <label for="account-plan">Tipo de Plano (Ex: 1 Tela, Premium) *</label>
+                        <input type="text" id="account-plan" placeholder="Ex: Tela 1, 4K Premium" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="account-activation">Data de Ativação *</label>
+                        <input type="date" id="account-activation" required>
+                    </div>
+                    
+                    <div class="form-group flex-1">
+                        <label for="account-expiry">Data de Vencimento *</label>
+                        <input type="date" id="account-expiry" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="account-status">Status Inicial</label>
+                    <select id="account-status">
+                        <option value="active">Ativa</option>
+                        <option value="warning">Vence em Breve</option>
+                        <option value="expired">Vencida / Suspensa</option>
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Conta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT CUSTOMER -->
+    <div id="modal-customer" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-customer-title">Cadastrar Novo Cliente</h3>
+                <button class="btn-close-modal" aria-label="Fechar modal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="form-customer">
+                <input type="hidden" id="customer-id">
+
+                <div class="form-group">
+                    <label for="customer-name">Nome do Cliente *</label>
+                    <input type="text" id="customer-name" placeholder="Nome Completo" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-phone">Contato / WhatsApp (Opcional)</label>
+                    <div class="input-icon-group">
+                        <span class="input-icon-prefix">+55</span>
+                        <input type="text" id="customer-phone" placeholder="DDD + Número (Ex: 11999999999)" style="padding-left: 2.75rem;">
+                    </div>
+                    <p class="form-help">Insira apenas números com DDD (ex: 11988887777).</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-account-link">Vincular a uma Conta / Tela</label>
+                    <select id="customer-account-link">
+                        <option value="">-- Nenhuma conta vinculada (Sem assinatura) --</option>
+                        <!-- Populated dynamically with registered accounts -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="customer-start-date">Data de Início da Parceria</label>
+                    <input type="date" id="customer-start-date">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-close-modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Script -->
+    <script src="app.js"></script>
+</body>
+</html>
