@@ -158,12 +158,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openMessageModal() {
         if (notificationsDropdown) notificationsDropdown.style.display = 'none';
-        if (modalMessage) modalMessage.style.display = 'flex';
+        if (modalMessage) {
+            modalMessage.style.display = 'flex';
+            setTimeout(() => modalMessage.classList.add('active'), 10);
+        }
         loadUsers();
     }
 
     function closeMessageModal() {
-        if (modalMessage) modalMessage.style.display = 'none';
+        if (modalMessage) {
+            modalMessage.classList.remove('active');
+            setTimeout(() => modalMessage.style.display = 'none', 200);
+        }
         if (formSendMessage) formSendMessage.reset();
     }
 

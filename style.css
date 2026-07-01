@@ -908,3 +908,42 @@ input:focus {
         gap: 1rem;
     }
 }
+
+/* Modals styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-radius);
+    width: 95%;
+    max-width: 500px;
+    box-shadow: var(--glass-shadow);
+    padding: 1.5rem;
+    transform: translateY(20px);
+    transition: transform 0.25s var(--transition-bounce);
+}
+
+.modal-overlay.active .modal-card {
+    transform: translateY(0);
+}
