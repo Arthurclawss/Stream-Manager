@@ -180,6 +180,12 @@ body {
     gap: 1rem;
 }
 
+.header-buttons-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .date-filter-wrapper {
     display: flex;
     align-items: center;
@@ -869,6 +875,19 @@ input:focus {
         width: 100%;
         display: flex;
         gap: 0.5rem;
+    }
+
+    .header-buttons-row {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .header-buttons-row > * {
+        flex: 1;
+        justify-content: center;
+        min-width: 45px;
     }
     
     .input-icon-group {
