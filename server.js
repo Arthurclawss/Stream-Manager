@@ -23,6 +23,12 @@ if (!fs.existsSync(FILE_USERS)) {
     fs.writeFileSync(FILE_USERS, JSON.stringify([]), 'utf8');
 }
 
+// Notifications DB File
+const FILE_NOTIFICATIONS = path.join(DATA_DIR, 'notifications.json');
+if (!fs.existsSync(FILE_NOTIFICATIONS)) {
+    fs.writeFileSync(FILE_NOTIFICATIONS, JSON.stringify([]), 'utf8');
+}
+
 // In-Memory Sessions (Token -> User Info)
 // For production, this could be saved in a database, but in-memory is standard and clean.
 const SESSIONS = {};
@@ -276,6 +282,82 @@ app.post('/api/streaming/customers', requireAuth, (req, res) => {
         }
     } else {
         res.status(400).json({ error: 'Data must be an array of customers.' });
+    }
+});
+
+// ==================================================
+// NOTIFICATIONS AND MESSAGING API ROUTES
+// ==================================================
+
+// 1. Get list of other registered users (safe, no passwords/salts)
+app.get('/api/users', requireAuth, (req, res) => {
+    const allUsers = readJSON(FILE_USERS);
+    const otherUsers = allUsers
+        .filter(u => u.id !== req.userId)
+        .map(u => ({ id: u.id, username: u.username }));
+    res.json(otherUsers);
+});
+
+// 2. Get received notifications
+app.get('/api/notifications', requireAuth, (req, res) => {
+    const notifications = readJSON(FILE_NOTIFICATIONS);
+    const userNotifications = notifications
+        .filter(n => n.receiverId === req.userId)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(userNotifications);
+});
+
+// 3. Send notification/message to another user
+app.post('/api/notifications', requireAuth, (req, res) => {
+    const { receiverId, message } = req.body;
+    if (!receiverId || !message) {
+        return res.status(400).json({ error: 'Receiver ID and message are required.' });
+    }
+
+    const allUsers = readJSON(FILE_USERS);
+    const receiverExists = allUsers.some(u => u.id === receiverId);
+    if (!receiverExists) {
+        return res.status(404).json({ error: 'Receiver user not found.' });
+    }
+
+    const notifications = readJSON(FILE_NOTIFICATIONS);
+    const newNotification = {
+        id: crypto.randomUUID(),
+        senderId: req.userId,
+        senderUsername: req.username,
+        receiverId: receiverId,
+        message: message,
+        isRead: false,
+        createdAt: new Date().toISOString()
+    };
+
+    notifications.push(newNotification);
+    if (writeJSON(FILE_NOTIFICATIONS, notifications)) {
+        res.status(201).json({ success: true, notification: newNotification });
+    } else {
+        res.status(500).json({ error: 'Failed to save notification.' });
+    }
+});
+
+// 4. Mark notification as read
+app.patch('/api/notifications/:id/read', requireAuth, (req, res) => {
+    const { id } = req.params;
+    const notifications = readJSON(FILE_NOTIFICATIONS);
+    const notif = notifications.find(n => n.id === id);
+
+    if (!notif) {
+        return res.status(404).json({ error: 'Notification not found.' });
+    }
+
+    if (notif.receiverId !== req.userId) {
+        return res.status(403).json({ error: 'Unauthorized to access this notification.' });
+    }
+
+    notif.isRead = true;
+    if (writeJSON(FILE_NOTIFICATIONS, notifications)) {
+        res.json({ success: true, notification: notif });
+    } else {
+        res.status(500).json({ error: 'Failed to update notification.' });
     }
 });
 

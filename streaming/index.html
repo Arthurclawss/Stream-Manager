@@ -49,6 +49,26 @@
                     <span class="theme-text">Modo Escuro</span>
                 </button>
 
+                <!-- Notifications wrapper -->
+                <div class="notification-wrapper" style="position: relative; display: inline-block; width: 100%;">
+                    <button id="btn-notifications" class="btn-theme-toggle" style="display: flex; align-items: center; gap: 0.75rem; width: 100%; position: relative;" title="Mensagens e Notificações">
+                        <i data-lucide="bell" style="width: 18px; height: 18px;"></i>
+                        <span class="theme-text">Notificações</span>
+                        <span id="notification-badge" class="badge-unread" style="display: none; position: absolute; top: 12px; right: 16px; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%;"></span>
+                    </button>
+                    
+                    <!-- Dropdown panel for notifications -->
+                    <div id="notifications-dropdown" class="notifications-dropdown-menu" style="display: none; position: absolute; left: 270px; bottom: 0; width: 320px; max-height: 400px; background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--card-shadow); z-index: 1010; overflow: hidden; flex-direction: column;">
+                        <div class="notif-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-primary);">
+                            <h4 style="margin: 0; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; gap: 8px; color: var(--text-primary);"><i data-lucide="message-square" style="width: 16px; height: 16px;"></i> Mensagens</h4>
+                            <button id="btn-new-message" class="btn btn-primary btn-sm" style="padding: 4px 8px; font-size: 0.75rem; border-radius: 6px; height: auto;">Nova</button>
+                        </div>
+                        <div id="notifications-list" style="overflow-y: auto; flex: 1; min-height: 100px; max-height: 300px; display: flex; flex-direction: column;">
+                            <!-- Dynamic notifications load here -->
+                        </div>
+                    </div>
+                </div>
+
                 <button id="btn-export" class="btn-theme-toggle" title="Exportar Backup">
                     <i data-lucide="download"></i>
                     <span class="theme-text">Backup</span>
@@ -397,6 +417,40 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-close-modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Salvar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Enviar Mensagem / Notificação -->
+    <div id="modal-message" class="modal-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); z-index: 1100; display: none; align-items: center; justify-content: center;">
+        <div class="modal-card" style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); width: 95%; max-width: 500px; box-shadow: var(--modal-shadow); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text-primary);">
+                    <i data-lucide="send" style="width: 18px; height: 18px; color: var(--accent-primary);"></i> Enviar Mensagem
+                </h3>
+                <button id="btn-close-message-modal" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+            
+            <form id="form-send-message" style="display: flex; flex-direction: column; gap: 1rem; margin: 0; width: 100%;">
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 0.4rem; width: 100%;">
+                    <label for="msg-recipient">Destinatário</label>
+                    <select id="msg-recipient" required style="font-family: var(--font-body); font-size: 0.9rem; padding: 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary); outline: none; width: 100%;">
+                        <option value="" disabled selected>Selecione um usuário...</option>
+                        <!-- Users will be populated here -->
+                    </select>
+                </div>
+                
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 0.4rem; width: 100%;">
+                    <label for="msg-text">Mensagem</label>
+                    <textarea id="msg-text" required placeholder="Digite sua mensagem ou notificação aqui..." rows="4" style="font-family: var(--font-body); font-size: 0.9rem; padding: 0.75rem; border-radius: var(--border-radius-md); border: 1px solid var(--border-color); background-color: var(--bg-primary); color: var(--text-primary); outline: none; width: 100%; resize: none;"></textarea>
+                </div>
+                
+                <div class="form-buttons" style="display: flex; gap: 0.75rem; margin-top: 0.5rem; width: 100%;">
+                    <button type="button" id="btn-cancel-message" class="btn btn-secondary" style="flex: 1; height: 42px;">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1; height: 42px;">Enviar Mensagem</button>
                 </div>
             </form>
         </div>

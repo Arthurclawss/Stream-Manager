@@ -1003,6 +1003,13 @@ select:focus {
         height: 1rem;
     }
 
+    .notifications-dropdown-menu {
+        left: auto !important;
+        right: 0 !important;
+        top: 46px !important;
+        bottom: auto !important;
+    }
+
     .main-content {
         padding: 1rem 1rem 80px 1rem; /* bottom padding for bottom nav */
         max-height: none;

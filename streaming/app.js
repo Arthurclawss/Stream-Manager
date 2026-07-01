@@ -22,6 +22,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnExport = document.getElementById('btn-export');
     const btnImportTrigger = document.getElementById('btn-import-trigger');
     const inputImport = document.getElementById('input-import');
+    
+    // Notifications DOM Elements
+    const btnNotifications = document.getElementById('btn-notifications');
+    const notificationsDropdown = document.getElementById('notifications-dropdown');
+    const notificationBadge = document.getElementById('notification-badge');
+    const btnNewMessage = document.getElementById('btn-new-message');
+    const notificationsList = document.getElementById('notifications-list');
+    const modalMessage = document.getElementById('modal-message');
+    const btnCloseMessageModal = document.getElementById('btn-close-message-modal');
+    const formSendMessage = document.getElementById('form-send-message');
+    const msgRecipient = document.getElementById('msg-recipient');
+    const msgText = document.getElementById('msg-text');
+    const btnCancelMessage = document.getElementById('btn-cancel-message');
     const navLinks = document.querySelectorAll('.nav-link');
     const tabPanels = document.querySelectorAll('.tab-panel');
     const pageTitle = document.getElementById('page-title');
@@ -138,6 +151,34 @@ document.addEventListener('DOMContentLoaded', () => {
         if (inputImport) {
             inputImport.addEventListener('change', importBackup);
         }
+
+        // Set up Notifications toggle and handlers
+        if (btnNotifications) {
+            btnNotifications.addEventListener('click', toggleNotificationsDropdown);
+        }
+        if (btnNewMessage) {
+            btnNewMessage.addEventListener('click', openMessageModal);
+        }
+        if (btnCloseMessageModal) {
+            btnCloseMessageModal.addEventListener('click', closeMessageModal);
+        }
+        if (btnCancelMessage) {
+            btnCancelMessage.addEventListener('click', closeMessageModal);
+        }
+        if (formSendMessage) {
+            formSendMessage.addEventListener('submit', handleSendMessageSubmit);
+        }
+        
+        loadNotifications();
+        setInterval(loadNotifications, 30000); // Poll every 30 seconds
+        
+        document.addEventListener('click', (e) => {
+            if (notificationsDropdown && btnNotifications && 
+                !notificationsDropdown.contains(e.target) && 
+                !btnNotifications.contains(e.target)) {
+                notificationsDropdown.style.display = 'none';
+            }
+        });
     }
 
     function handleLogout() {
@@ -183,6 +224,156 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsText(file);
         e.target.value = '';
+    }
+
+    // --- Notifications and Messaging Logic ---
+    let notifications = [];
+
+    function toggleNotificationsDropdown() {
+        if (!notificationsDropdown) return;
+        const isHidden = notificationsDropdown.style.display === 'none' || notificationsDropdown.style.display === '';
+        notificationsDropdown.style.display = isHidden ? 'flex' : 'none';
+        
+        // Mark all loaded notifications as read when opening dropdown
+        if (isHidden) {
+            notifications.forEach(n => {
+                if (!n.isRead) {
+                    markNotificationAsRead(n.id);
+                }
+            });
+        }
+    }
+
+    function openMessageModal() {
+        if (notificationsDropdown) notificationsDropdown.style.display = 'none';
+        if (modalMessage) modalMessage.style.display = 'flex';
+        loadUsers();
+    }
+
+    function closeMessageModal() {
+        if (modalMessage) modalMessage.style.display = 'none';
+        if (formSendMessage) formSendMessage.reset();
+    }
+
+    async function loadUsers() {
+        try {
+            const res = await fetch('/api/users', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            const usersList = await res.json();
+            
+            if (msgRecipient) {
+                msgRecipient.innerHTML = '<option value="" disabled selected>Selecione um usuário...</option>';
+                usersList.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.id;
+                    opt.textContent = u.username;
+                    msgRecipient.appendChild(opt);
+                });
+            }
+        } catch (err) {
+            console.error("Erro ao carregar usuários:", err);
+        }
+    }
+
+    async function loadNotifications() {
+        try {
+            const res = await fetch('/api/notifications', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(await res.text());
+            notifications = await res.json();
+            
+            // Update badge
+            const unreadCount = notifications.filter(n => !n.isRead).length;
+            if (notificationBadge) {
+                if (unreadCount > 0) {
+                    notificationBadge.style.display = 'block';
+                } else {
+                    notificationBadge.style.display = 'none';
+                }
+            }
+
+            // Render list
+            if (notificationsList) {
+                if (notifications.length === 0) {
+                    notificationsList.innerHTML = `
+                        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">
+                            Nenhuma mensagem recebida.
+                        </div>
+                    `;
+                } else {
+                    notificationsList.innerHTML = notifications.map(n => {
+                        const dateStr = new Date(n.createdAt).toLocaleDateString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        const unreadBg = n.isRead ? 'transparent' : 'rgba(59, 130, 246, 0.05)';
+                        const unreadDot = n.isRead ? '' : '<span style="width: 8px; height: 8px; background-color: var(--accent-primary); border-radius: 50%; display: inline-block;"></span>';
+                        return `
+                            <div class="notification-item" style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); background-color: ${unreadBg}; display: flex; flex-direction: column; gap: 4px; transition: background-color 0.2s;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+                                        ${unreadDot} ${n.senderUsername}
+                                    </span>
+                                    <span style="font-size: 0.7rem; color: var(--text-muted);">${dateStr}</span>
+                                </div>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; word-break: break-word;">
+                                    ${n.message}
+                                </p>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+        } catch (err) {
+            console.error("Erro ao carregar notificações:", err);
+        }
+    }
+
+    async function handleSendMessageSubmit(e) {
+        e.preventDefault();
+        const receiverId = msgRecipient.value;
+        const messageText = msgText.value.trim();
+
+        if (!receiverId || !messageText) return;
+
+        try {
+            const res = await fetch('/api/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ receiverId, message: messageText })
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+            
+            alert("Mensagem enviada com sucesso!");
+            closeMessageModal();
+        } catch (err) {
+            alert("Erro ao enviar mensagem: " + err.message);
+        }
+    }
+
+    async function markNotificationAsRead(id) {
+        try {
+            await fetch(`/api/notifications/${id}/read`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const n = notifications.find(notif => notif.id === id);
+            if (n) n.isRead = true;
+            
+            const unreadCount = notifications.filter(notif => !notif.isRead).length;
+            if (notificationBadge && unreadCount === 0) {
+                notificationBadge.style.display = 'none';
+            }
+        } catch (err) {
+            console.error("Erro ao marcar como lida:", err);
+        }
     }
 
     // --- Date Helpers ---
