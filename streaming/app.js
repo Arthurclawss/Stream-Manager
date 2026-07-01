@@ -424,8 +424,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Dynamic Status Calculator ---
-    function getAccountStatus(expiryDate) {
-        const diff = getDaysDifference(expiryDate);
+    function getAccountStatus(acc) {
+        if (typeof acc === 'string') {
+            const diff = getDaysDifference(acc);
+            if (diff < 0) return 'expired';
+            if (diff <= 3) return 'warning';
+            return 'active';
+        }
+        if (!acc) return 'active';
+        if (acc.status) return acc.status;
+        const diff = getDaysDifference(acc.expiryDate);
         if (diff < 0) return 'expired';
         if (diff <= 3) return 'warning';
         return 'active';
@@ -487,6 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('modal-account-title').textContent = 'Cadastrar Nova Conta';
             accActivation.value = getLocalTodayDate();
             accExpiry.value = getExpiryDefaultDate();
+            if (accStatus) accStatus.value = 'active';
             modalAccount.classList.add('active');
         });
 
@@ -590,6 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const planVal = accPlan.value.trim();
         const activationVal = accActivation.value;
         const expiryVal = accExpiry.value;
+        const statusVal = accStatus ? accStatus.value : 'active';
         const idVal = accId.value;
 
         if (idVal) {
@@ -603,7 +613,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     password: passwordVal,
                     plan: planVal,
                     activationDate: activationVal,
-                    expiryDate: expiryVal
+                    expiryDate: expiryVal,
+                    status: statusVal
                 };
             }
         } else {
@@ -615,7 +626,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 password: passwordVal,
                 plan: planVal,
                 activationDate: activationVal,
-                expiryDate: expiryVal
+                expiryDate: expiryVal,
+                status: statusVal
             };
             accounts.push(newAcc);
         }
@@ -683,6 +695,9 @@ document.addEventListener('DOMContentLoaded', () => {
         accPlan.value = acc.plan;
         accActivation.value = acc.activationDate;
         accExpiry.value = acc.expiryDate;
+        if (accStatus) {
+            accStatus.value = acc.status || getAccountStatus(acc);
+        }
 
         document.getElementById('modal-account-title').textContent = 'Editar Conta';
         modalAccount.classList.add('active');
@@ -708,12 +723,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const diffDays = getDaysDifference(currentExpiry);
             
             let baseDate = new Date();
-            // If already expired, start from today. If active, add to existing expiry date.
             if (diffDays >= 0) {
                 baseDate = new Date(currentExpiry);
             }
             
-            // Add 30 calendar days
             baseDate.setDate(baseDate.getDate() + 30);
             
             const year = baseDate.getFullYear();
@@ -721,6 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const day = String(baseDate.getDate()).padStart(2, '0');
             
             accounts[index].expiryDate = `${year}-${month}-${day}`;
+            accounts[index].status = 'active'; // Reset to active on renewal
             
             saveAccounts();
             updateUI();
@@ -858,7 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let expiredCount = 0;
 
         accounts.forEach(acc => {
-            const status = getAccountStatus(acc.expiryDate);
+            const status = getAccountStatus(acc);
             if (status === 'active') activeCount++;
             else if (status === 'warning') warningCount++;
             else expiredCount++;
@@ -890,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Accounts that are either expired or warning (vencendo em breve)
         const alerts = accounts.filter(acc => {
-            const status = getAccountStatus(acc.expiryDate);
+            const status = getAccountStatus(acc);
             return status === 'expired' || status === 'warning';
         });
 
@@ -907,7 +921,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dashboardEmptyAlerts.classList.add('hidden');
 
         alerts.forEach(acc => {
-            const status = getAccountStatus(acc.expiryDate);
+            const status = getAccountStatus(acc);
             const daysLeft = getDaysDifference(acc.expiryDate);
             const client = customers.find(c => c.accountId == acc.id);
             const clientName = client ? client.name : '<span style="color: var(--status-active); font-weight: 600;">Disponível</span>';
@@ -960,7 +974,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const statusFilter = filterStatus.value;
 
         let filtered = accounts.filter(acc => {
-            const status = getAccountStatus(acc.expiryDate);
+            const status = getAccountStatus(acc);
             const client = customers.find(c => c.accountId == acc.id);
             const clientName = client ? client.name.toLowerCase() : '';
 
@@ -993,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', () => {
         accountsEmptyState.classList.add('hidden');
 
         filtered.forEach(acc => {
-            const status = getAccountStatus(acc.expiryDate);
+            const status = getAccountStatus(acc);
             const client = customers.find(c => c.accountId == acc.id);
             const clientName = client ? client.name : '<span style="color: var(--status-active); font-weight: 600;">Disponível</span>';
 
@@ -1107,8 +1121,9 @@ document.addEventListener('DOMContentLoaded', () => {
             let waButtonHTML = '';
 
             if (acc) {
+                const status = getAccountStatus(acc);
                 const daysLeft = getDaysDifference(acc.expiryDate);
-                const statusStr = daysLeft < 0 ? 'VENCIDA' : `${daysLeft}d restantes`;
+                const statusStr = status === 'expired' ? 'VENCIDA' : `${daysLeft}d restantes`;
                 
                 accInfo = `
                     <div style="font-weight: 500;">
@@ -1121,8 +1136,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Prefilled WhatsApp reminder
                 if (cust.phone) {
                     let message = `Olá, ${cust.name}! Passando para lembrar que sua assinatura da plataforma ${acc.platform} (${acc.plan}) vence em ${formatDateBR(acc.expiryDate)}. `;
-                    if (daysLeft < 0) {
-                        message = `Olá, ${cust.name}! Sua assinatura da plataforma ${acc.platform} (${acc.plan}) venceu em ${formatDateBR(acc.expiryDate)}. `;
+                    if (status === 'expired') {
+                        message = `Olá, ${cust.name}! Sua assinatura da plataforma ${acc.platform} (${acc.plan}) venceu/foi suspensa. `;
                     }
                     message += `Gostaria de realizar a renovação para continuar assistindo?`;
                     
