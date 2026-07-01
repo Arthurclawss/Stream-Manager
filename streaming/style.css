@@ -933,7 +933,11 @@ select:focus {
     .sidebar-footer {
         border-top: none;
         padding-top: 0;
-        margin-left: 0.5rem;
+        margin-left: auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
     }
     
     .theme-text {
@@ -977,12 +981,16 @@ select:focus {
     .sidebar-nav {
         width: 100%;
         justify-content: space-around;
+        flex-wrap: wrap;
+        gap: 0.5rem;
     }
     
     .sidebar-footer {
-        position: absolute;
-        top: 1rem;
-        right: 1.5rem;
+        position: static;
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+        gap: 1rem;
     }
     
     .form-row {

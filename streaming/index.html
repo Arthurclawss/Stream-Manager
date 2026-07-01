@@ -37,20 +37,31 @@
                 <button class="nav-link" data-tab="tab-customers">
                     <i data-lucide="users"></i> Clientes
                 </button>
-                <hr style="border-color: rgba(255,255,255,0.08); margin: 12px 16px;">
-                <a href="/" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: var(--text-muted); text-decoration: none; border-radius: 8px; font-size: 0.95rem; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.color='var(--primary)'; this.style.background='var(--hover-bg)';" onmouseout="this.style.color='var(--text-muted)'; this.style.background='transparent';">
-                    <i data-lucide="wallet" style="width: 18px; height: 18px;"></i> Controle Financeiro
+                <a href="/" class="nav-link">
+                    <i data-lucide="wallet"></i> Controle Financeiro
                 </a>
             </nav>
 
-            <div class="sidebar-footer" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="sidebar-footer">
                 <button id="theme-toggle" class="btn-theme-toggle" aria-label="Alternar tema">
                     <i data-lucide="moon" class="theme-icon-dark"></i>
                     <i data-lucide="sun" class="theme-icon-light"></i>
                     <span class="theme-text">Modo Escuro</span>
                 </button>
-                <button id="btn-logout" class="btn-theme-toggle" aria-label="Sair da conta" style="color: #ef4444; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;">
-                    <i data-lucide="log-out" style="width: 18px; height: 18px;"></i>
+
+                <button id="btn-export" class="btn-theme-toggle" title="Exportar Backup">
+                    <i data-lucide="download"></i>
+                    <span class="theme-text">Backup</span>
+                </button>
+                
+                <button id="btn-import-trigger" class="btn-theme-toggle" title="Importar Backup">
+                    <i data-lucide="upload"></i>
+                    <span class="theme-text">Importar</span>
+                </button>
+                <input type="file" id="input-import" accept=".json" style="display: none;">
+
+                <button id="btn-logout" class="btn-theme-toggle" aria-label="Sair da conta" style="color: #ef4444;">
+                    <i data-lucide="log-out"></i>
                     <span class="theme-text">Sair da Conta</span>
                 </button>
             </div>

@@ -19,6 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DOM Elements ---
     const btnLogout = document.getElementById('btn-logout');
+    const btnExport = document.getElementById('btn-export');
+    const btnImportTrigger = document.getElementById('btn-import-trigger');
+    const inputImport = document.getElementById('input-import');
     const navLinks = document.querySelectorAll('.nav-link');
     const tabPanels = document.querySelectorAll('.tab-panel');
     const pageTitle = document.getElementById('page-title');
@@ -126,12 +129,60 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnLogout) {
             btnLogout.addEventListener('click', handleLogout);
         }
+        if (btnExport) {
+            btnExport.addEventListener('click', exportBackup);
+        }
+        if (btnImportTrigger) {
+            btnImportTrigger.addEventListener('click', () => inputImport.click());
+        }
+        if (inputImport) {
+            inputImport.addEventListener('change', importBackup);
+        }
     }
 
     function handleLogout() {
         localStorage.removeItem('financadia_token');
         localStorage.removeItem('financadia_username');
         window.location.href = '/login.html';
+    }
+
+    function exportBackup() {
+        const backupData = { accounts, customers };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `streaming_backup_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    function importBackup(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            try {
+                const importedData = JSON.parse(event.target.result);
+                if (importedData && Array.isArray(importedData.accounts) && Array.isArray(importedData.customers)) {
+                    if (confirm(`Tem certeza que deseja importar ${importedData.accounts.length} contas e ${importedData.customers.length} clientes? Isso substituirá seus registros atuais.`)) {
+                        accounts = importedData.accounts;
+                        customers = importedData.customers;
+                        await saveAccounts();
+                        await saveCustomers();
+                        updateUI();
+                        alert("Backup importado e sincronizado com sucesso!");
+                    }
+                } else {
+                    alert("Formato de backup inválido. O arquivo deve conter contas e clientes.");
+                }
+            } catch (err) {
+                alert("Erro ao ler o arquivo de backup: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
     }
 
     // --- Date Helpers ---

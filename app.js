@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- DOM Elements ---
     const btnLogout = document.getElementById('btn-logout');
+    const btnExport = document.getElementById('btn-export');
+    const btnImportTrigger = document.getElementById('btn-import-trigger');
+    const inputImport = document.getElementById('input-import');
     const form = document.getElementById('finance-form');
     const inputSale = document.getElementById('entry-sale');
     const inputExpense = document.getElementById('entry-expense');
